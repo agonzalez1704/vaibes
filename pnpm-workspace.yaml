@@ -1,0 +1,16 @@
+allowBuilds:
+  '@clerk/shared': true
+  browser-tabs-lock: true
+  bufferutil: true
+  core-js: true
+  msgpackr-extract: true
+  sharp: true
+  utf-8-validate: true
+onlyBuiltDependencies:
+  - '@clerk/shared'
+  - browser-tabs-lock
+  - bufferutil
+  - core-js
+  - msgpackr-extract
+  - sharp
+  - utf-8-validate

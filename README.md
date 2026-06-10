@@ -1,80 +1,56 @@
-# Vaibes
+# Welcome to your Expo app 👋
 
-Daily personalized phrases for your mood, themes, and rhythm — delivered at unexpected moments.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-[Download on the App Store](https://apps.apple.com/app/id6761248903)
+## Get started
 
----
+1. Install dependencies
 
-## Support
+   ```bash
+   npm install
+   ```
 
-Email: **agonzalez.nrn02@gmail.com**
+2. Start the app
 
-Response time: within 2 business days.
+   ```bash
+   npx expo start
+   ```
 
----
+In the output, you'll find options to open the app in a
 
-## FAQ
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-### How does the daily phrase work?
-Vaibes generates one personal phrase a day based on the profile you set during onboarding (mood, themes, interests, tone, language). It lands as a push notification at a random time between 9 AM and 9 PM in your local timezone. Tap to hear it read aloud.
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-### What does Vaibes Pro unlock?
-- On-demand vibes whenever you want
-- 1×, 2×, or 3× daily delivery
-- Voice selection from the full library
-- Unlimited phrase history
-- Share without watermark
+## Get a fresh project
 
-### How do I cancel my subscription?
-1. Open the **Settings** app on your iPhone
-2. Tap your **Apple ID** at the top
-3. Tap **Subscriptions** → **Vaibes**
-4. Tap **Cancel Subscription**
+When you're ready, run:
 
-Or open Vaibes → Settings → **Manage subscription**.
+```bash
+npm run reset-project
+```
 
-### I purchased Pro on another device. How do I get it here?
-Open Vaibes → Settings → **Restore purchases**. Sign in with the same Apple ID used for the original purchase.
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-### I'm not receiving notifications.
-1. Settings → Vaibes → Notifications → ensure **Allow Notifications** is on
-2. In Vaibes → Settings → **Enabled** toggle on
-3. Check **Frequency** is set to at least 1×
-4. Phrases land randomly between 9 AM – 9 PM your local time — first one may take up to 24 hours
+### Other setup steps
 
-### I want my data deleted.
-Email us at agonzalez.nrn02@gmail.com with the subject **"Delete my account"** from the email on your Vaibes account. We'll remove your profile, phrases, audio, and push token within 7 days.
+- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
+- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
+- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
 
-### Pricing
-- **Monthly** — $1.99
-- **Yearly** — $14.99 (save 37%)
+## Learn more
 
-Subscriptions auto-renew unless canceled at least 24 hours before the end of the current period.
+To learn more about developing your project with Expo, look at the following resources:
 
-### What languages are supported?
-English, Español, Français, Português, Deutsch, Italiano, 日本語.
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-### Is Vaibes available on Android?
-Not yet. iPhone only.
+## Join the community
 
----
+Join our community of developers creating universal apps.
 
-## Privacy & Terms
-
-- [Privacy Policy](https://w3fgg5pv.us-east.insforge.app/api/storage/buckets/legal/objects/privacy.html)
-- [Terms of Service](https://w3fgg5pv.us-east.insforge.app/api/storage/buckets/legal/objects/terms.html)
-
----
-
-## Disclaimer
-
-Vaibes generates short reflections for entertainment and mindfulness. It is not medical, legal, financial, or mental-health advice. If you're in crisis, contact a qualified professional or a crisis hotline.
-
-US: 988 (Suicide & Crisis Lifeline)
-UK: 116 123 (Samaritans)
-International: https://findahelpline.com
-
----
-
-© 2026 Antonio Gonzalez
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

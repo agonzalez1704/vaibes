@@ -1,0 +1,34 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": { "simulator": false },
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "ios": { "simulator": false }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6761248903",
+        "appleTeamId": "88L8ZGW5PY",
+        "ascApiKeyPath": "/Users/antoniogonzalez/.eas-keys/AuthKey_523F68P2N8.p8",
+        "ascApiKeyId": "523F68P2N8",
+        "ascApiKeyIssuerId": "c5b16b09-90e2-49fc-9889-710811ff7431"
+      }
+    }
+  }
+}

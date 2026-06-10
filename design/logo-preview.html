@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vaibes — Logo proposals</title>
+<style>
+  :root { --accent:#FF2D78; --bg:#0a0a0a; }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; background:#070707; color:#fff;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:48px 24px;
+  }
+  h1 { font-weight:300; letter-spacing:6px; text-align:center; margin:0 0 6px; }
+  .sub { text-align:center; color:rgba(255,255,255,.5); margin:0 0 40px; font-size:14px; }
+  .grid {
+    display:grid; gap:28px; max-width:1100px; margin:0 auto;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  }
+  .card {
+    background:#121212; border:1px solid rgba(255,255,255,.08); border-radius:20px;
+    padding:24px; text-align:center;
+  }
+  .tile {
+    width:200px; height:200px; margin:0 auto 16px; border-radius:44px;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    box-shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  .name { font-size:15px; font-weight:600; margin:0 0 2px; }
+  .desc { font-size:12px; color:rgba(255,255,255,.45); margin:0 0 14px; min-height:30px; }
+  .controls { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  button {
+    background:var(--accent); color:#fff; border:0; border-radius:999px;
+    padding:8px 14px; font-size:12px; font-weight:600; cursor:pointer;
+  }
+  button.ghost { background:transparent; border:1px solid rgba(255,255,255,.25); color:#fff; }
+  .row2 { display:flex; gap:10px; justify-content:center; margin-top:10px; }
+  .swatch { width:26px; height:26px; border-radius:8px; cursor:pointer; border:2px solid transparent; }
+  .swatch.active { border-color:#fff; }
+  footer { text-align:center; color:rgba(255,255,255,.4); font-size:12px; margin-top:40px; }
+  code { background:#1c1c1c; padding:2px 6px; border-radius:6px; }
+</style>
+</head>
+<body>
+  <h1>VAIBES</h1>
+  <p class="sub">Logo proposals — ripples of a drop hitting water · ondas en el agua</p>
+
+  <div class="row2" style="margin-bottom:28px;">
+    <span style="align-self:center;color:rgba(255,255,255,.5);font-size:13px;">Accent:</span>
+    <div class="swatch active" style="background:#FF2D78" data-accent="#FF2D78"></div>
+    <div class="swatch" style="background:#FF5A3C" data-accent="#FF5A3C"></div>
+    <div class="swatch" style="background:#63E6BE" data-accent="#63E6BE"></div>
+    <div class="swatch" style="background:#5C7CFA" data-accent="#5C7CFA"></div>
+    <div class="swatch" style="background:#ffffff" data-accent="#ffffff"></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    Pick one → click <b>PNG 1024</b> → save as <code>assets/images/icon.png</code> (and a 432px version for Android foreground).<br/>
+    The in-app animated mark lives in <code>src/components/logo.tsx</code> (LogoRipple / LogoMark).
+  </footer>
+
+<script>
+let ACCENT = '#FF2D78';
+const BG = '#0a0a0a';
+
+// Each concept returns inner SVG markup for a 0 0 100 100 viewBox.
+// Use {{A}} as accent placeholder.
+const CONCEPTS = [
+  {
+    id:'wave-arcs',
+    name:'Wave Arcs',
+    desc:'Lower-half arcs — water surface ripples. (your pick)',
+    bg:'#0a0a0a',
+    svg:`
+      <path d="M14 54 A36 36 0 0 0 86 54" stroke="{{A}}" stroke-width="3" stroke-opacity=".22" fill="none" stroke-linecap="round"/>
+      <path d="M24 54 A26 26 0 0 0 76 54" stroke="{{A}}" stroke-width="3" stroke-opacity=".42" fill="none" stroke-linecap="round"/>
+      <path d="M34 54 A16 16 0 0 0 66 54" stroke="{{A}}" stroke-width="3.5" stroke-opacity=".7" fill="none" stroke-linecap="round"/>
+      <circle cx="50" cy="50" r="6.5" fill="{{A}}"/>`
+  },
+  {
+    id:'wave-arcs-drop',
+    name:'Wave Arcs + Drop',
+    desc:'Arcs spreading from a droplet falling into them.',
+    bg:'#0a0a0a',
+    svg:`
+      <ellipse cx="50" cy="26" rx="3.6" ry="5.4" fill="{{A}}"/>
+      <path d="M16 58 A34 34 0 0 0 84 58" stroke="{{A}}" stroke-width="3" stroke-opacity=".2" fill="none" stroke-linecap="round"/>
+      <path d="M26 58 A24 24 0 0 0 74 58" stroke="{{A}}" stroke-width="3" stroke-opacity=".4" fill="none" stroke-linecap="round"/>
+      <path d="M36 58 A14 14 0 0 0 64 58" stroke="{{A}}" stroke-width="3.5" stroke-opacity=".72" fill="none" stroke-linecap="round"/>`
+  },
+  {
+    id:'wave-arcs-full',
+    name:'Double Wave',
+    desc:'Arcs above and below the drop — symmetrical ripple.',
+    bg:'#0a0a0a',
+    svg:`
+      <path d="M22 40 A30 30 0 0 1 78 40" stroke="{{A}}" stroke-width="3" stroke-opacity=".3" fill="none" stroke-linecap="round"/>
+      <path d="M32 44 A20 20 0 0 1 68 44" stroke="{{A}}" stroke-width="3" stroke-opacity=".55" fill="none" stroke-linecap="round"/>
+      <circle cx="50" cy="50" r="6" fill="{{A}}"/>
+      <path d="M32 56 A20 20 0 0 0 68 56" stroke="{{A}}" stroke-width="3" stroke-opacity=".55" fill="none" stroke-linecap="round"/>
+      <path d="M22 60 A30 30 0 0 0 78 60" stroke="{{A}}" stroke-width="3" stroke-opacity=".3" fill="none" stroke-linecap="round"/>`
+  },
+  {
+    id:'lotus-waves',
+    name:'Lotus of Waves',
+    desc:'Petals drawn as curved waves — lotus from ripples.',
+    bg:'#0a0a0a',
+    svg:`
+      <g fill="none" stroke="{{A}}" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M50 66 Q40 42 50 20 Q60 42 50 66 Z" stroke-width="3" stroke-opacity=".95"/>
+        <path d="M50 66 Q34 48 28 28 Q50 38 50 66 Z" stroke-width="2.6" stroke-opacity=".6" transform="rotate(8 50 66)"/>
+        <path d="M50 66 Q66 48 72 28 Q50 38 50 66 Z" stroke-width="2.6" stroke-opacity=".6" transform="rotate(-8 50 66)"/>
+        <path d="M50 66 Q28 58 16 42 Q44 46 50 66 Z" stroke-width="2.2" stroke-opacity=".32"/>
+        <path d="M50 66 Q72 58 84 42 Q56 46 50 66 Z" stroke-width="2.2" stroke-opacity=".32"/>
+      </g>
+      <path d="M30 74 A22 22 0 0 0 70 74" stroke="{{A}}" stroke-width="2.4" stroke-opacity=".5" fill="none" stroke-linecap="round"/>`
+  },
+  {
+    id:'lotus-on-ripple',
+    name:'Lotus on Ripple',
+    desc:'Simpler lotus floating over two water arcs.',
+    bg:'#0a0a0a',
+    svg:`
+      <g fill="{{A}}">
+        <path d="M50 58 Q44 42 50 28 Q56 42 50 58 Z" fill-opacity=".95"/>
+        <path d="M50 58 Q38 48 32 34 Q50 40 50 58 Z" fill-opacity=".6"/>
+        <path d="M50 58 Q62 48 68 34 Q50 40 50 58 Z" fill-opacity=".6"/>
+        <path d="M50 58 Q30 56 20 46 Q46 46 50 58 Z" fill-opacity=".32"/>
+        <path d="M50 58 Q70 56 80 46 Q54 46 50 58 Z" fill-opacity=".32"/>
+      </g>
+      <path d="M26 70 A24 24 0 0 0 74 70" stroke="{{A}}" stroke-width="2.6" stroke-opacity=".55" fill="none" stroke-linecap="round"/>
+      <path d="M34 78 A16 16 0 0 0 66 78" stroke="{{A}}" stroke-width="2.6" stroke-opacity=".3" fill="none" stroke-linecap="round"/>`
+  },
+  {
+    id:'lotus-gradient',
+    name:'Lotus (gradient)',
+    desc:'Filled lotus petals, magenta→deep gradient.',
+    bg:'#0a0a0a',
+    grad:true,
+    svg:`
+      <g fill="url(#g)">
+        <path d="M50 60 Q43 42 50 24 Q57 42 50 60 Z"/>
+        <path d="M50 60 Q36 50 30 33 Q50 40 50 60 Z" fill-opacity=".82"/>
+        <path d="M50 60 Q64 50 70 33 Q50 40 50 60 Z" fill-opacity=".82"/>
+        <path d="M50 60 Q28 58 18 47 Q46 46 50 60 Z" fill-opacity=".6"/>
+        <path d="M50 60 Q72 58 82 47 Q54 46 50 60 Z" fill-opacity=".6"/>
+      </g>`
+  },
+  {
+    id:'wave-arcs-light',
+    name:'Wave Arcs · Light',
+    desc:'Your pick on a light tile — alt theme.',
+    bg:'#F4F4F5',
+    svg:`
+      <path d="M14 54 A36 36 0 0 0 86 54" stroke="{{A}}" stroke-width="3" stroke-opacity=".28" fill="none" stroke-linecap="round"/>
+      <path d="M24 54 A26 26 0 0 0 76 54" stroke="{{A}}" stroke-width="3" stroke-opacity=".5" fill="none" stroke-linecap="round"/>
+      <path d="M34 54 A16 16 0 0 0 66 54" stroke="{{A}}" stroke-width="3.5" stroke-opacity=".8" fill="none" stroke-linecap="round"/>
+      <circle cx="50" cy="50" r="6.5" fill="{{A}}"/>`
+  },
+];
+
+function defs(){ return `<defs><radialGradient id="g" cx="50%" cy="42%" r="60%">
+  <stop offset="0" stop-color="${ACCENT}"/>
+  <stop offset="1" stop-color="#7E0A38"/></radialGradient></defs>`; }
+
+function svgFor(c, size){
+  const inner = c.svg.replaceAll('{{A}}', ACCENT);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 100 100">
+    ${c.grad?defs():''}
+    <rect width="100" height="100" rx="22" fill="${c.bg}"/>
+    ${inner}
+  </svg>`;
+}
+
+function render(){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  CONCEPTS.forEach(c=>{
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML = `
+      <div class="tile" style="background:${c.bg}">${svgFor(c,200)}</div>
+      <p class="name">${c.name}</p>
+      <p class="desc">${c.desc}</p>
+      <div class="controls">
+        <button data-png="${c.id}">PNG 1024</button>
+        <button class="ghost" data-svg="${c.id}">SVG</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function download(name, href){
+  const a=document.createElement('a'); a.href=href; a.download=name; a.click();
+}
+
+function exportPNG(c){
+  const size=1024;
+  const svg=svgFor(c,size);
+  const blob=new Blob([svg],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const img=new Image();
+  img.onload=()=>{
+    const cv=document.createElement('canvas'); cv.width=size; cv.height=size;
+    const ctx=cv.getContext('2d'); ctx.drawImage(img,0,0,size,size);
+    download(`vaibes-icon-${c.id}.png`, cv.toDataURL('image/png'));
+    URL.revokeObjectURL(url);
+  };
+  img.src=url;
+}
+
+document.addEventListener('click', e=>{
+  const png=e.target.getAttribute?.('data-png');
+  const svgId=e.target.getAttribute?.('data-svg');
+  const acc=e.target.getAttribute?.('data-accent');
+  if(png){ exportPNG(CONCEPTS.find(c=>c.id===png)); }
+  if(svgId){ const c=CONCEPTS.find(c=>c.id===svgId);
+    download(`vaibes-icon-${c.id}.svg`, 'data:image/svg+xml;utf8,'+encodeURIComponent(svgFor(c,1024))); }
+  if(acc){ ACCENT=acc; document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('active', s.getAttribute('data-accent')===acc)); render(); }
+});
+
+render();
+</script>
+</body>
+</html>

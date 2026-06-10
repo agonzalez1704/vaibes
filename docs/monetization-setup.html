@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vaibes — Monetization Setup Guide</title>
+<style>
+  :root {
+    --bg: #0b0b0e;
+    --bg-soft: #15151a;
+    --card: #1a1a21;
+    --text: #ecedf0;
+    --muted: #9ba1ad;
+    --accent: #63E6BE;
+    --accent-2: #FF2D78;
+    --border: rgba(255,255,255,0.08);
+    --warn: #ffb454;
+    --code-bg: #0e0f13;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 56px 28px 96px; }
+  h1 { font-size: 38px; font-weight: 300; letter-spacing: 4px; margin: 0 0 6px; text-transform: uppercase; }
+  h1 .accent { color: var(--accent); }
+  .subtitle { color: var(--muted); margin-bottom: 40px; font-size: 16px; }
+
+  .progress {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(11,11,14,0.92);
+    backdrop-filter: blur(12px);
+    margin: 0 -28px 40px; padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px;
+  }
+  .progress-bar { flex: 1; height: 6px; background: var(--bg-soft); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width .35s ease; }
+  .progress-text { color: var(--muted); font-size: 13px; min-width: 90px; text-align: right; font-variant-numeric: tabular-nums; }
+  .reset-btn {
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+  }
+  .reset-btn:hover { color: var(--accent-2); border-color: var(--accent-2); }
+
+  h2 {
+    font-size: 24px; margin: 48px 0 8px; font-weight: 500;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  h2 .num {
+    background: var(--accent); color: #000;
+    font-size: 13px; font-weight: 700;
+    border-radius: 999px; padding: 4px 12px;
+    letter-spacing: 1px;
+  }
+  h2.done .num { background: var(--muted); }
+  h2.done .title { text-decoration: line-through; color: var(--muted); }
+  .estimate {
+    color: var(--muted); font-size: 13px; margin: 0 0 18px; font-style: italic;
+  }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px 24px; margin: 14px 0;
+  }
+  .card ol, .card ul { padding-left: 22px; margin: 8px 0; }
+  .card li { margin: 8px 0; }
+
+  code, pre {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13.5px;
+  }
+  code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    padding: 16px 18px; border-radius: 10px; overflow-x: auto;
+    line-height: 1.45; color: var(--text);
+  }
+  pre code { background: transparent; padding: 0; color: inherit; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .checkbox-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 18px; border-radius: 10px;
+    background: var(--bg-soft); border: 1px solid var(--border);
+    margin: 10px 0; cursor: pointer; user-select: none;
+    transition: border-color .2s, background .2s;
+  }
+  .checkbox-row:hover { border-color: var(--accent); }
+  .checkbox-row.checked { opacity: 0.55; }
+  .checkbox-row.checked .label { text-decoration: line-through; color: var(--muted); }
+  .checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; }
+  .checkbox-row.checked .checkbox { background: var(--accent); border-color: var(--accent); }
+  .checkbox-row.checked .checkbox::after { content: "✓"; color: #000; font-weight: 800; font-size: 14px; }
+  .label { flex: 1; }
+  .label strong { display: block; margin-bottom: 2px; }
+  .label .sub { color: var(--muted); font-size: 13.5px; }
+
+  .callout {
+    background: rgba(255,180,84,0.08);
+    border-left: 3px solid var(--warn);
+    padding: 12px 16px; border-radius: 4px;
+    margin: 14px 0; font-size: 14px; color: #ffd9a3;
+  }
+  .callout.success {
+    background: rgba(99,230,190,0.08);
+    border-left-color: var(--accent);
+    color: #bff5e0;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; }
+
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+  .tag.you { background: rgba(99,230,190,0.15); color: var(--accent); }
+  .tag.me  { background: rgba(255,45,120,0.15); color: var(--accent-2); }
+  .tag.wait{ background: rgba(255,180,84,0.15); color: var(--warn); }
+
+  footer { margin-top: 64px; color: var(--muted); font-size: 13px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Vaibes <span class="accent">Monetization</span> Setup</h1>
+  <p class="subtitle">$1.99/mo + $14.99/yr Pro subscriptions via App Store Connect + RevenueCat. Check off each step. Progress saves locally.</p>
+
+  <div class="progress">
+    <div class="progress-bar"><div class="progress-fill" id="pf"></div></div>
+    <div class="progress-text" id="pt">0 / 0</div>
+    <button class="reset-btn" onclick="resetProgress()">Reset</button>
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2 id="s1"><span class="num">01</span> <span class="title">Apple Small Business Program</span></h2>
+  <p class="estimate">⏱ 5 min · then ~24h to approve · <span class="tag you">You</span></p>
+  <div class="card">
+    <p>Cuts Apple's cut from <strong>30% → 15%</strong> on the first $1M/yr. Free.</p>
+    <label class="checkbox-row" data-id="sbp-enroll">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Enroll at <a href="https://developer.apple.com/app-store/small-business-program/enroll/" target="_blank" rel="noopener">developer.apple.com</a></strong>
+        <span class="sub">Sign in with the Apple ID that owns your Dev Program (<code>agonzalez.nrn02@gmail.com</code>). Agree to terms → Submit.</span>
+      </span>
+    </label>
+    <div class="callout">Wait for the email confirmation before publishing any subscription, or you'll pay 30% on day-one sales.</div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2 id="s2"><span class="num">02</span> <span class="title">App Store Connect — Paid Apps Agreement</span></h2>
+  <p class="estimate">⏱ 10 min · tax forms can take 1–3 business days · <span class="tag you">You</span></p>
+  <div class="card">
+    <p>All four must be <strong>green</strong> on <a href="https://appstoreconnect.apple.com/business" target="_blank" rel="noopener">ASC → Business</a> tab. You can't sell subscriptions until they are.</p>
+    <label class="checkbox-row" data-id="asc-agreement">
+      <span class="checkbox"></span>
+      <span class="label"><strong>Paid Apps Agreement</strong><span class="sub">Accepted.</span></span>
+    </label>
+    <label class="checkbox-row" data-id="asc-banking">
+      <span class="checkbox"></span>
+      <span class="label"><strong>Banking Information</strong><span class="sub">Bank account where Apple sends payouts. Edits require a fresh review — get it right the first time.</span></span>
+    </label>
+    <label class="checkbox-row" data-id="asc-tax">
+      <span class="checkbox"></span>
+      <span class="label"><strong>Tax Forms</strong><span class="sub">US: W-9 · non-US: W-8BEN. Validation takes 1–3 business days.</span></span>
+    </label>
+    <label class="checkbox-row" data-id="asc-contacts">
+      <span class="checkbox"></span>
+      <span class="label"><strong>Contacts</strong><span class="sub">Financial, legal, technical. Usually all you.</span></span>
+    </label>
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2 id="s3"><span class="num">03</span> <span class="title">Create Subscription Products in ASC</span></h2>
+  <p class="estimate">⏱ 15 min · <span class="tag you">You</span></p>
+  <div class="card">
+    <p>ASC → <strong>Apps → Vaibes → Monetization → Subscriptions</strong>.</p>
+    <label class="checkbox-row" data-id="sg-create">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Create subscription group <code>Vaibes Pro</code></strong>
+        <span class="sub">Reference Name + English Display Name both <code>Vaibes Pro</code>.</span>
+      </span>
+    </label>
+    <label class="checkbox-row" data-id="prod-monthly">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Monthly product</strong>
+        <span class="sub">
+          Reference Name: <code>Vaibes Pro Monthly</code><br>
+          Product ID: <code>vaibes_pro_monthly</code> (copy exactly — locked after save)<br>
+          Duration: 1 Month — Price: <strong>$1.99</strong> USD<br>
+          Display Name: <code>Pro Monthly</code><br>
+          Description: <em>Unlimited daily vibes, voice playback, full history, all voices. Renews monthly until cancelled.</em>
+        </span>
+      </span>
+    </label>
+    <label class="checkbox-row" data-id="prod-yearly">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Yearly product</strong>
+        <span class="sub">
+          Reference Name: <code>Vaibes Pro Yearly</code><br>
+          Product ID: <code>vaibes_pro_yearly</code><br>
+          Duration: 1 Year — Price: <strong>$14.99</strong> USD<br>
+          Display Name: <code>Pro Yearly</code><br>
+          Description: <em>Save 37% vs monthly.</em>
+        </span>
+      </span>
+    </label>
+    <label class="checkbox-row" data-id="prod-screenshot">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Upload Review Screenshot at the group level</strong>
+        <span class="sub">A mockup is fine for now. ASC requires one image per group before subscriptions can ship.</span>
+      </span>
+    </label>
+    <div class="callout">Both products will read <strong>"Missing Metadata"</strong> until every red field is filled. After: <strong>"Ready to Submit"</strong>. They auto-enter review when you submit your first app build that references them.</div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2 id="s4"><span class="num">04</span> <span class="title">Sandbox Tester</span></h2>
+  <p class="estimate">⏱ 5 min · <span class="tag you">You</span></p>
+  <div class="card">
+    <p>For testing IAP without real charges.</p>
+    <label class="checkbox-row" data-id="sandbox-tester">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Create sandbox tester</strong>
+        <span class="sub">ASC → <strong>Users and Access → Sandbox → Testers → +</strong>. Use an email that is NOT a real Apple ID (e.g. <code>vaibes-sandbox@yourdomain.com</code>). Other fields any plausible values.</span>
+      </span>
+    </label>
+    <label class="checkbox-row" data-id="sandbox-signin">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Sign into Sandbox on your test iPhone</strong>
+        <span class="sub">Settings → App Store → Sandbox Account → Sign in with the tester email. DO NOT sign out of your real Apple ID.</span>
+      </span>
+    </label>
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2 id="s5"><span class="num">05</span> <span class="title">RevenueCat Account + Project</span></h2>
+  <p class="estimate">⏱ 10 min · <span class="tag you">You</span></p>
+  <div class="card">
+    <label class="checkbox-row" data-id="rc-signup">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Sign up at <a href="https://app.revenuecat.com/signup" target="_blank" rel="noopener">app.revenuecat.com</a></strong>
+        <span class="sub">Use <code>agonzalez.nrn02@gmail.com</code>. Free tier covers up to $2.5k MRR.</span>
+      </span>
+    </label>
+    <label class="checkbox-row" data-id="rc-project">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Create project <code>Vaibes</code></strong>
+        <span class="sub">Inside, click <strong>+ Add App → iOS</strong>. App Name: <code>Vaibes iOS</code> · Bundle ID: <code>com.vaibes.app</code>.</span>
+      </span>
+    </label>
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2 id="s6"><span class="num">06</span> <span class="title">Connect RevenueCat to ASC</span></h2>
+  <p class="estimate">⏱ 15 min · <span class="tag you">You</span></p>
+  <div class="card">
+    <p>RevenueCat needs an App Store Connect API key to read your subscription products + receive renewal events.</p>
+    <p><strong>Easy path:</strong> reuse the key we already created for EAS Submit.</p>
+    <table>
+      <tr><th>Field</th><th>Value</th></tr>
+      <tr><td>Issuer ID</td><td><code>c5b16b09-90e2-49fc-9889-710811ff7431</code></td></tr>
+      <tr><td>Key ID</td><td><code>523F68P2N8</code></td></tr>
+      <tr><td>.p8 file</td><td><code>~/.eas-keys/AuthKey_523F68P2N8.p8</code> — paste full contents incl. BEGIN/END lines</td></tr>
+      <tr><td>Vendor Number</td><td>Look up at ASC → <a href="https://appstoreconnect.apple.com/itc/payments_and_financial_reports" target="_blank" rel="noopener">Payments and Financial Reports</a> → top of page</td></tr>
+      <tr><td>Bundle ID</td><td><code>com.vaibes.app</code></td></tr>
+    </table>
+    <label class="checkbox-row" data-id="rc-asc-link">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>RevenueCat → Project Settings → Apps → Vaibes iOS → App Store Connect API</strong>
+        <span class="sub">Fill the fields above. Save.</span>
+      </span>
+    </label>
+    <label class="checkbox-row" data-id="rc-products-synced">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Verify products synced</strong>
+        <span class="sub">RC → Products tab. Should show <code>vaibes_pro_monthly</code> and <code>vaibes_pro_yearly</code> within a minute.</span>
+      </span>
+    </label>
+  </div>
+
+  <!-- SECTION 7 -->
+  <h2 id="s7"><span class="num">07</span> <span class="title">Entitlement + Offering</span></h2>
+  <p class="estimate">⏱ 5 min · <span class="tag you">You</span></p>
+  <div class="card">
+    <p>The conceptual layer the app code reads.</p>
+    <label class="checkbox-row" data-id="rc-entitlement">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Create Entitlement <code>pro</code></strong>
+        <span class="sub">RC → Entitlements → + New. Identifier: <code>pro</code>. Display Name: <code>Pro</code>. Then attach BOTH products to it.</span>
+      </span>
+    </label>
+    <label class="checkbox-row" data-id="rc-offering">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Create Offering <code>default</code></strong>
+        <span class="sub">
+          RC → Offerings → + New. Identifier: <code>default</code>. Display Name: <code>Default Offering</code>.<br>
+          Add two packages inside:<br>
+          • Annual → <code>vaibes_pro_yearly</code><br>
+          • Monthly → <code>vaibes_pro_monthly</code><br>
+          Toggle this as the <strong>Current Offering</strong> at the top.
+        </span>
+      </span>
+    </label>
+  </div>
+
+  <!-- SECTION 8 -->
+  <h2 id="s8"><span class="num">08</span> <span class="title">Grab the iOS SDK Key</span></h2>
+  <p class="estimate">⏱ 1 min · <span class="tag you">You</span></p>
+  <div class="card">
+    <label class="checkbox-row" data-id="rc-key">
+      <span class="checkbox"></span>
+      <span class="label">
+        <strong>Copy the iOS Public API Key</strong>
+        <span class="sub">RC → Project Settings → API Keys → <strong>iOS — Public API Key</strong>. Starts with <code>appl_</code>.</span>
+      </span>
+    </label>
+  </div>
+
+  <!-- SECTION 9 -->
+  <h2 id="s9"><span class="num">09</span> <span class="title">Send Me These Values</span></h2>
+  <p class="estimate">⏱ 1 min · <span class="tag you">You</span></p>
+  <div class="card">
+    <p>Paste this block into chat with your real values:</p>
+    <pre><code>RC_IOS_PUBLIC_KEY=appl_xxxxxxxxxxxxxxxxxxxx
+ASC_VENDOR_NUMBER=12345678
+SBP_ENROLLED=yes|pending|no
+ASC_PAID_APPS_AGREEMENT=signed|pending
+PRODUCT_MONTHLY_STATUS=Ready to Submit|other
+PRODUCT_YEARLY_STATUS=Ready to Submit|other</code></pre>
+    <label class="checkbox-row" data-id="sent">
+      <span class="checkbox"></span>
+      <span class="label"><strong>Pasted values to me</strong><span class="sub">After this I take over.</span></span>
+    </label>
+  </div>
+
+  <!-- SECTION 10 -->
+  <h2 id="s10"><span class="num">10</span> <span class="title">What I'll Do</span></h2>
+  <p class="estimate">⏱ ~7 hrs of focused work · <span class="tag me">Me</span></p>
+  <div class="card">
+    <ol>
+      <li>Migration: <code>users.subscription_tier</code> (<code>free</code> | <code>pro</code>) + <code>subscription_expires_at</code>.</li>
+      <li>Install <code>react-native-purchases</code> + Expo config plugin.</li>
+      <li>Register <code>EXPO_PUBLIC_RC_IOS_KEY</code> on EAS for prod/preview/dev environments.</li>
+      <li>Build paywall component: monthly ⇄ yearly toggle (default Yearly), "Save 37%" badge, big purchase button, Restore + Terms/Privacy links.</li>
+      <li>Wire 4 paywall entry points:
+        <ol type="a">
+          <li>On-demand generate (free user)</li>
+          <li>Voice section in Settings</li>
+          <li>History scroll past phrase 7</li>
+          <li>Frequency modal: 2× / 3× selection</li>
+        </ol>
+      </li>
+      <li>Replace hardcoded <code>IS_PRO = false</code> with <code>useCustomerInfo().entitlements.active.pro</code>.</li>
+      <li>RC webhook → InsForge edge function <code>revenuecat-webhook</code> updates <code>users.subscription_tier</code>.</li>
+      <li>Tighten <code>generate-phrase</code> + <code>synthesize-phrase</code> caps to read <code>tier</code>.</li>
+      <li>Add <strong>Restore Purchases</strong> button in Settings.</li>
+      <li>End-to-end sandbox test walkthrough.</li>
+    </ol>
+  </div>
+
+  <!-- SECTION 11 -->
+  <h2 id="s11"><span class="num">11</span> <span class="title">Timeline</span></h2>
+  <p class="estimate"><span class="tag wait">Apple</span> blocks some steps · plan in parallel</p>
+  <div class="card">
+    <table>
+      <tr><th>Block</th><th>Time</th></tr>
+      <tr><td>You do sections 1–8</td><td>60–90 min</td></tr>
+      <tr><td>Apple tax + banking processing</td><td>up to 3 business days</td></tr>
+      <tr><td>I write the code</td><td>~7 hrs focused</td></tr>
+      <tr><td>You sandbox-test</td><td>30 min</td></tr>
+      <tr><td><strong>Total — now to subscriptions live</strong></td><td><strong>4–10 days</strong></td></tr>
+    </table>
+    <div class="callout success">Don't wait on Apple to do RC steps — they're independent. RevenueCat can be fully configured while ASC tax forms are still processing.</div>
+  </div>
+
+  <footer>
+    Progress persisted to <code>localStorage</code> on this device only.<br>
+    Generated for <code>com.vaibes.app</code>.
+  </footer>
+
+</div>
+
+<script>
+const KEY = 'vaibes-monetization-progress';
+
+function save() {
+  const ids = [...document.querySelectorAll('.checkbox-row.checked')].map(r => r.dataset.id);
+  localStorage.setItem(KEY, JSON.stringify(ids));
+}
+
+function load() {
+  try {
+    const ids = JSON.parse(localStorage.getItem(KEY) ?? '[]');
+    ids.forEach(id => {
+      const el = document.querySelector(`.checkbox-row[data-id="${id}"]`);
+      if (el) el.classList.add('checked');
+    });
+  } catch {}
+}
+
+function updateProgress() {
+  const all = document.querySelectorAll('.checkbox-row');
+  const done = document.querySelectorAll('.checkbox-row.checked').length;
+  const pct = all.length ? (done / all.length) * 100 : 0;
+  document.getElementById('pf').style.width = pct + '%';
+  document.getElementById('pt').textContent = `${done} / ${all.length}`;
+
+  // Mark section heading "done" if all its rows are checked.
+  document.querySelectorAll('h2').forEach(h => {
+    const sectionId = h.id;
+    if (!sectionId) return;
+    const next = h.nextElementSibling;
+    // Find rows in this section: walk siblings until next h2
+    let node = h.nextElementSibling;
+    const rows = [];
+    while (node && node.tagName !== 'H2') {
+      rows.push(...node.querySelectorAll?.('.checkbox-row') ?? []);
+      node = node.nextElementSibling;
+    }
+    if (rows.length === 0) return;
+    const allChecked = rows.every(r => r.classList.contains('checked'));
+    h.classList.toggle('done', allChecked);
+  });
+}
+
+function resetProgress() {
+  if (!confirm('Reset all progress?')) return;
+  localStorage.removeItem(KEY);
+  document.querySelectorAll('.checkbox-row.checked').forEach(r => r.classList.remove('checked'));
+  updateProgress();
+}
+
+document.querySelectorAll('.checkbox-row').forEach(row => {
+  row.addEventListener('click', (e) => {
+    // Allow link clicks to pass through.
+    if (e.target.tagName === 'A') return;
+    row.classList.toggle('checked');
+    save();
+    updateProgress();
+  });
+});
+
+load();
+updateProgress();
+</script>
+</body>
+</html>
