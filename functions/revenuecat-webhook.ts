@@ -14,11 +14,16 @@ import { createAdminClient } from 'npm:@insforge/sdk';
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST' };
 const ENTITLEMENT = 'Vaibes Pro';
 
-const PERIOD_FROM_TYPE: Record<string, 'monthly' | 'yearly' | 'lifetime'> = {
-  MONTHLY: 'monthly',
-  ANNUAL: 'yearly',
-  LIFETIME: 'lifetime',
-};
+// RC's event.period_type is the offer phase (NORMAL/TRIAL/INTRO), not the
+// billing duration — derive duration from the product identifier instead.
+function periodFromProductId(productId: string | null): 'monthly' | 'yearly' | 'lifetime' | null {
+  if (!productId) return null;
+  const p = productId.toLowerCase();
+  if (p.includes('lifetime')) return 'lifetime';
+  if (p.includes('year') || p.includes('annual')) return 'yearly';
+  if (p.includes('month')) return 'monthly';
+  return null;
+}
 
 export default async function (req: Request): Promise<Response> {
   try {
@@ -66,8 +71,8 @@ async function handle(req: Request): Promise<Response> {
   //   BILLING_ISSUE → keep Pro for grace period
   const expiresMs: number | null = event.expiration_at_ms ?? null;
   const expiresAt = expiresMs ? new Date(expiresMs).toISOString() : null;
-  const period = PERIOD_FROM_TYPE[event.period_type] ?? null;
   const productId: string | null = event.product_id ?? null;
+  const period = periodFromProductId(productId);
 
   const ACTIVE_EVENTS = new Set([
     'INITIAL_PURCHASE',
