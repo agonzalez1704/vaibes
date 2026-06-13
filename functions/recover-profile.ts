@@ -81,19 +81,147 @@ async function handle(req: Request): Promise<Response> {
 
   if (posts.length === 0) return json({ error: 'no_captions' }, 422);
 
-  const baseUrl = Deno.env.get('INSFORGE_BASE_URL');
-  const pbRes = await fetch(`${baseUrl}/functions/profile-build`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-internal-key': Deno.env.get('INTERNAL_FN_KEY') ?? '',
-    },
-    body: JSON.stringify({ user_id: userId, posts }),
-  });
-  const pbBody = await pbRes.text();
-  if (!pbRes.ok) return json({ error: 'profile_build_failed', status: pbRes.status, body: pbBody }, 502);
+  // Build INLINE — sibling function fetches fail with 508 Loop Detected.
+  try {
+    await buildAndSaveProfile(admin, userId, posts);
+  } catch (e) {
+    return json({ error: 'profile_build_failed', detail: String((e as Error)?.message ?? e) }, 502);
+  }
 
   return json({ ok: true, status: 'rebuilt', posts: posts.length }, 200);
+}
+
+// ---------------------------------------------------------------------------
+// Inlined profile build (mirror of functions/profile-build.ts). Kept in sync
+// manually because edge functions can't import each other and can't HTTP-call
+// siblings (508 Loop Detected).
+// ---------------------------------------------------------------------------
+
+const PROFILE_MODEL = 'anthropic/claude-sonnet-4.5';
+
+async function buildAndSaveProfile(admin: any, userId: string, posts: any[]): Promise<void> {
+  const captions = posts.map((p, i) => `[${i + 1}] ${p.caption ?? ''}`).slice(0, 50).join('\n');
+  const allTags = posts.flatMap((p) => p.hashtags ?? []);
+  const topTags = topN(allTags, 30);
+
+  let profile = await buildWithLLM(captions, topTags);
+  let source: 'llm' | 'fallback' = 'llm';
+  if (!profile) {
+    profile = buildFallback(topTags, captions);
+    source = 'fallback';
+  }
+
+  await admin.database.from('profiles').upsert([{
+    user_id: userId,
+    interests: profile.interests ?? [],
+    mood_baseline: profile.mood_baseline ?? 'calm',
+    language: profile.language ?? 'en',
+    tone_preference: profile.tone_preference ?? 'warm',
+    themes: profile.themes ?? [],
+    raw_signals: { topTags, sampleCount: posts.length, source },
+    updated_at: new Date().toISOString(),
+  }], { onConflict: 'user_id' });
+}
+
+async function buildWithLLM(captions: string, topTags: string[]): Promise<any | null> {
+  const prompt = `Analyze these social media posts and return a JSON profile.
+
+Posts (captions):
+${captions}
+
+Top hashtags: ${topTags.join(', ')}
+
+Return ONLY valid JSON with this exact shape:
+{
+  "interests": [string, ...max 12],
+  "mood_baseline": "introspective" | "energetic" | "calm" | "intense" | "playful" | "stoic",
+  "language": "<ISO 639-1 code>",
+  "tone_preference": "minimal" | "poetic" | "direct" | "warm",
+  "themes": [string, ...max 8]
+}
+
+No prose, no markdown fences. JSON only.`;
+
+  const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${openrouterKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: PROFILE_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+        temperature: 0.3,
+        max_tokens: 600,
+      }),
+    });
+    if (!res.ok) {
+      console.error('[recover-profile] llm http', res.status, await res.text().catch(() => ''));
+      return null;
+    }
+    const data = await res.json();
+    return extractJson(data?.choices?.[0]?.message?.content ?? '');
+  } catch (e) {
+    console.error('[recover-profile] llm threw', e);
+    return null;
+  }
+}
+
+function extractJson(raw: string): any | null {
+  const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  try { return JSON.parse(cleaned); } catch { /* try below */ }
+  const m = cleaned.match(/\{[\s\S]*\}/);
+  if (m) { try { return JSON.parse(m[0]); } catch { /* fallthrough */ } }
+  return null;
+}
+
+function buildFallback(topTags: string[], captions: string): any {
+  const interests = topTags.slice(0, 10).map(humanize);
+  const text = captions.toLowerCase();
+
+  const moodScores: Record<string, number> = {
+    energetic: hits(text, ['workout', 'gym', 'run', 'energy', 'hype', 'party', 'travel']),
+    calm: hits(text, ['calm', 'peace', 'quiet', 'morning', 'tea', 'walk', 'nature', 'breathe']),
+    introspective: hits(text, ['think', 'reflect', 'reading', 'journal', 'wonder', 'remember']),
+    playful: hits(text, ['lol', 'fun', 'haha', '😂', '🤣', 'game', 'play']),
+    stoic: hits(text, ['discipline', 'work', 'focus', 'grind', 'build', 'ship']),
+    intense: hits(text, ['fire', 'beast', 'never', 'crush', 'goals']),
+  };
+  const moodBaseline = Object.entries(moodScores).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'calm';
+
+  const language = guessLanguage(text);
+  const tone = moodBaseline === 'stoic' || moodBaseline === 'intense' ? 'direct'
+    : moodBaseline === 'introspective' ? 'poetic' : 'warm';
+
+  return {
+    interests,
+    mood_baseline: moodBaseline,
+    language,
+    tone_preference: tone,
+    themes: interests.slice(0, 5).concat([moodBaseline]),
+  };
+}
+
+function hits(text: string, words: string[]): number {
+  return words.reduce((n, w) => n + (text.split(w).length - 1), 0);
+}
+
+function humanize(tag: string): string {
+  return tag.replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function guessLanguage(text: string): string {
+  if (/\b(que|para|con|pero|cuando|porque|gracias|así|también|estoy)\b/.test(text)) return 'es';
+  if (/\b(et|le|la|les|une|pour|avec|mais|parce|merci)\b/.test(text)) return 'fr';
+  if (/\b(und|der|die|das|ich|nicht|mit|aber|wenn|danke)\b/.test(text)) return 'de';
+  if (/\b(que|para|com|mas|porque|obrigado|também|aqui)\b/.test(text)) return 'pt';
+  return 'en';
+}
+
+function topN(arr: string[], n: number): string[] {
+  const counts = new Map<string, number>();
+  for (const t of arr) counts.set(t, (counts.get(t) ?? 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([k]) => k);
 }
 
 function json(payload: unknown, status: number) {

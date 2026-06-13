@@ -24,12 +24,22 @@ const PHRASES: Record<string, string[]> = {
   ],
 };
 
+// Job error codes that mean "we can't read this account's public posts"
+// (private, media-only, or blocked) — resolution is the quiz fallback.
+const UNREADABLE_CODES = ['private_or_empty', 'no_captions'];
+function isUnreadable(code: string | null | undefined): boolean {
+  if (!code) return false;
+  const c = code.toLowerCase();
+  return UNREADABLE_CODES.includes(c) || c.includes('private') || c.includes('empty');
+}
+
 export default function LoadingScreen() {
   const router = useRouter();
-  const { jobId } = useLocalSearchParams<{ jobId: string }>();
+  const { jobId, handle, platform } = useLocalSearchParams<{ jobId: string; handle?: string; platform?: string }>();
   const { client, isReady } = useInsforgeClient();
   const [status, setStatus] = useState<string>('queued');
   const [error, setError] = useState<string | null>(null);
+  const [unreadable, setUnreadable] = useState(false);
 
   useEffect(() => {
     if (!isReady || !jobId) return;
@@ -48,7 +58,11 @@ export default function LoadingScreen() {
         if (data?.status) setStatus(data.status);
 
         if (data?.status === 'failed') {
-          setError(data.error ?? 'Scrape failed');
+          if (isUnreadable(data.error)) {
+            setUnreadable(true);
+          } else {
+            setError(data.error ?? 'Scrape failed');
+          }
           return;
         }
 
@@ -108,25 +122,45 @@ export default function LoadingScreen() {
         style={StyleSheet.absoluteFill as any}
       />
 
-      <View style={styles.content}>
-        <LotusParticles size={300} />
+      {unreadable ? (
+        <View style={styles.content}>
+          <Text style={styles.lock}>🔒</Text>
+          <Text style={styles.title}>
+            {handle ? `@${handle} looks private` : 'That account looks private'}
+          </Text>
+          <Text style={styles.subtitle}>
+            We can only read public posts, so we couldn’t learn your vibe from{' '}
+            {platform ? platform : 'that account'}. Answer a few quick questions instead — it takes about a minute.
+          </Text>
 
-        <Text style={styles.title}>Reading your vibes</Text>
-        {error ? (
-          <Text style={styles.subtitle}>Couldn’t finish: {error}</Text>
-        ) : (
-          <Typewriter
-            phrases={PHRASES[status] ?? PHRASES.queued}
-            style={styles.subtitle}
-          />
-        )}
-
-        {error && (
-          <Pressable style={styles.retryBtn} onPress={() => router.replace('/(onboarding)/handle')}>
-            <Text style={styles.retryText}>Try a different handle</Text>
+          <Pressable style={styles.primaryBtn} onPress={() => router.replace('/(onboarding)/quiz')}>
+            <Text style={styles.primaryText}>Answer a few questions</Text>
           </Pressable>
-        )}
-      </View>
+          <Pressable style={styles.ghostBtn} onPress={() => router.replace('/(onboarding)/handle')}>
+            <Text style={styles.retryText}>Try a public account</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <View style={styles.content}>
+          <LotusParticles size={300} />
+
+          <Text style={styles.title}>Reading your vibes</Text>
+          {error ? (
+            <Text style={styles.subtitle}>Couldn’t finish: {error}</Text>
+          ) : (
+            <Typewriter
+              phrases={PHRASES[status] ?? PHRASES.queued}
+              style={styles.subtitle}
+            />
+          )}
+
+          {error && (
+            <Pressable style={styles.retryBtn} onPress={() => router.replace('/(onboarding)/handle')}>
+              <Text style={styles.retryText}>Try a different handle</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
     </ImageBackground>
   );
 }
@@ -138,4 +172,8 @@ const styles = StyleSheet.create({
   subtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 15, marginTop: 12, textAlign: 'center' },
   retryBtn: { marginTop: 32, borderWidth: 1, borderColor: '#fff', borderRadius: 999, paddingVertical: 14, paddingHorizontal: 24 },
   retryText: { color: '#fff' },
+  lock: { fontSize: 48, marginBottom: 8 },
+  primaryBtn: { marginTop: 32, backgroundColor: '#fff', borderRadius: 999, paddingVertical: 16, paddingHorizontal: 36 },
+  primaryText: { color: '#000', fontSize: 16, fontWeight: '600' },
+  ghostBtn: { marginTop: 16, paddingVertical: 12, paddingHorizontal: 24 },
 });

@@ -45,7 +45,7 @@ export default function ConsentScreen() {
         setBusy(false);
         return;
       }
-      router.replace({ pathname: '/(onboarding)/loading', params: { jobId: data.job_id } });
+      router.replace({ pathname: '/(onboarding)/loading', params: { jobId: data.job_id, handle, platform } });
     } catch (err: any) {
       Alert.alert('Network error', err?.message ?? 'Try again');
       setBusy(false);
