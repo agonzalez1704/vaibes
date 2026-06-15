@@ -24,6 +24,7 @@ export default function Home() {
   const { signOut, userId } = useAuth();
   const { client, isReady } = useInsforgeClient();
   const [phrases, setPhrases] = useState<Phrase[]>([]);
+  const [focusPhrase, setFocusPhrase] = useState<Phrase | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [showFreqModal, setShowFreqModal] = useState(false);
@@ -46,6 +47,25 @@ export default function Home() {
     setPhrases(data ?? []);
     setLoading(false);
   }, [client]);
+
+  // Resolve the phrase a notification tap points at (`play=<id>`) so the home
+  // card shows THAT phrase, not just the newest. Fetch it by id if it's older
+  // than the 20 we load, so it's always reachable.
+  useEffect(() => {
+    if (!isReady) return;
+    if (!playParam) { setFocusPhrase(null); return; }
+    const inList = phrases.find((p) => p.id === playParam);
+    if (inList) { setFocusPhrase(inList); return; }
+    if (focusPhrase?.id === playParam) return;
+    (async () => {
+      const { data } = await client.database
+        .from('phrases')
+        .select('id, text, generated_at, theme, audio_url')
+        .eq('id', playParam)
+        .maybeSingle();
+      if (data) setFocusPhrase(data);
+    })();
+  }, [isReady, playParam, phrases, client, focusPhrase?.id]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -111,6 +131,7 @@ export default function Home() {
         Alert.alert('Couldn’t generate', String(code ?? 'Try again'));
       }
     } else {
+      setFocusPhrase(null); // a new vibe was created — show the latest
       await load();
     }
     setGenerating(false);
@@ -120,7 +141,8 @@ export default function Home() {
     return <View style={styles.center}><ActivityIndicator color="#fff" /></View>;
   }
 
-  const latest = phrases[0];
+  // Show the notification-targeted phrase when present, else the newest.
+  const latest = focusPhrase ?? phrases[0];
 
   return (
     <View style={styles.bg}>
@@ -159,6 +181,7 @@ export default function Home() {
             <Text style={styles.date}>{new Date(latest.generated_at).toLocaleDateString([], { month: 'long', day: 'numeric' })}</Text>
             <View style={{ marginTop: 28 }}>
               <PhrasePlayer
+                key={latest.id}
                 phraseId={latest.id}
                 client={client}
                 cachedAudioUrl={latest.audio_url}

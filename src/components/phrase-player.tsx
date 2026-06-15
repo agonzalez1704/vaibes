@@ -21,24 +21,35 @@ export function PhrasePlayer({ phraseId, client, cachedAudioUrl, size = 56, auto
   const player = useAudioPlayer(audioUrl);
   const status = useAudioPlayerStatus(player);
 
-  // When a new url loads, auto-play once ready.
+  // Only start playback when the user explicitly asked for it (tap or
+  // notification deep-link). A cached url present at mount must NOT auto-play —
+  // otherwise every card in the history list plays at once.
+  const wantPlayRef = useRef(false);
+
+  // Once the (possibly freshly fetched) url is loaded, honor a pending request.
   useEffect(() => {
-    if (audioUrl && status?.isLoaded && !status.playing) {
+    if (wantPlayRef.current && audioUrl && status?.isLoaded && !status.playing) {
+      wantPlayRef.current = false;
       player.play();
     }
   }, [audioUrl, status?.isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-play on mount when deep-linked from a notification tap.
-  // Fires once; subsequent renders ignored.
+  // Auto-play on mount when deep-linked from a notification tap. Fires once.
   const autoFiredRef = useRef(false);
   useEffect(() => {
     if (!autoPlay || autoFiredRef.current) return;
     autoFiredRef.current = true;
+    wantPlayRef.current = true;
     if (audioUrl) {
-      // url already known — playback effect above will trigger
+      // url already cached — if it's already loaded, play now; otherwise the
+      // load effect above will fire once ready.
+      if (status?.isLoaded && !status.playing) {
+        wantPlayRef.current = false;
+        player.play();
+      }
       return;
     }
-    // No cached url yet — kick the fetch path.
+    // No cached url yet — kick the fetch path (which sets wantPlayRef again).
     void onPress();
   }, [autoPlay]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -54,13 +65,15 @@ export function PhrasePlayer({ phraseId, client, cachedAudioUrl, size = 56, auto
       return;
     }
 
-    // Fetch / synthesize
+    // Fetch / synthesize — play once it loads.
+    wantPlayRef.current = true;
     setFetching(true);
     const { data, error } = await client.functions.invoke('synthesize-phrase', {
       body: { phrase_id: phraseId },
     });
     setFetching(false);
     if (error || (data as any)?.error) {
+      wantPlayRef.current = false;
       const body = (data as any) ?? {};
       const code = body.error ?? error?.message;
       if (code === 'tts_daily_cap') {
