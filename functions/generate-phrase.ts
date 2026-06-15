@@ -67,6 +67,14 @@ export default async function (req: Request): Promise<Response> {
     const tier: 'free' | 'pro' = (u?.subscription_tier === 'pro') ? 'pro' : 'free';
     const caps = CAPS[tier];
 
+    // Welcome vibe: every user's first-ever phrase is free, so a brand-new
+    // free user never lands on an empty home gated behind the paywall.
+    const { count: totalCount } = await admin.database
+      .from('phrases')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+    const isFirstEver = (totalCount ?? 0) === 0;
+
     const since24h = new Date(Date.now() - 24 * 3600_000).toISOString();
     const { data: dayList } = await admin.database
       .from('phrases')
@@ -76,25 +84,28 @@ export default async function (req: Request): Promise<Response> {
       .order('generated_at', { ascending: false });
 
     const todayCount = dayList?.length ?? 0;
-    if (tier === 'free' && todayCount >= caps.hard) {
+    if (!isFirstEver && tier === 'free' && todayCount >= caps.hard) {
       return json({ error: 'pro_required', message: 'On-demand vibes are a Pro feature.' }, 402);
     }
-    if (todayCount >= caps.hard) {
-      return json({ error: 'daily_cap_reached', cap: caps.hard, retry_after: 'tomorrow' }, 429);
-    }
-    if (todayCount >= caps.soft) {
-      return json({
-        error: 'daily_soft_cap', cap: caps.soft, count: todayCount,
-        message: `You've used ${todayCount} vibes today. Save some for tomorrow.`,
-      }, 429);
-    }
-    const lastAt = dayList?.[0]?.generated_at ? new Date(dayList[0].generated_at).getTime() : 0;
-    const since = (Date.now() - lastAt) / 1000;
-    if (since < THROTTLE_SECONDS) {
-      return json({
-        error: 'too_soon',
-        retry_after_seconds: Math.ceil(THROTTLE_SECONDS - since),
-      }, 429);
+    // Caps + throttle apply to everything except the one-time welcome vibe.
+    if (!isFirstEver) {
+      if (todayCount >= caps.hard) {
+        return json({ error: 'daily_cap_reached', cap: caps.hard, retry_after: 'tomorrow' }, 429);
+      }
+      if (todayCount >= caps.soft) {
+        return json({
+          error: 'daily_soft_cap', cap: caps.soft, count: todayCount,
+          message: `You've used ${todayCount} vibes today. Save some for tomorrow.`,
+        }, 429);
+      }
+      const lastAt = dayList?.[0]?.generated_at ? new Date(dayList[0].generated_at).getTime() : 0;
+      const since = (Date.now() - lastAt) / 1000;
+      if (since < THROTTLE_SECONDS) {
+        return json({
+          error: 'too_soon',
+          retry_after_seconds: Math.ceil(THROTTLE_SECONDS - since),
+        }, 429);
+      }
     }
   }
 

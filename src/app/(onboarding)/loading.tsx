@@ -38,8 +38,10 @@ export default function LoadingScreen() {
   const { jobId, handle, platform } = useLocalSearchParams<{ jobId: string; handle?: string; platform?: string }>();
   const { client, isReady } = useInsforgeClient();
   const [status, setStatus] = useState<string>('queued');
-  const [error, setError] = useState<string | null>(null);
-  const [unreadable, setUnreadable] = useState(false);
+  // Any terminal onboarding failure surfaces the same fallback screen with the
+  // quiz as the guaranteed path forward. `failCode` tailors the copy.
+  const [failCode, setFailCode] = useState<string | null>(null);
+  const failed = failCode !== null;
 
   useEffect(() => {
     if (!isReady || !jobId) return;
@@ -58,11 +60,7 @@ export default function LoadingScreen() {
         if (data?.status) setStatus(data.status);
 
         if (data?.status === 'failed') {
-          if (isUnreadable(data.error)) {
-            setUnreadable(true);
-          } else {
-            setError(data.error ?? 'Scrape failed');
-          }
+          setFailCode(data.error ?? 'scrape_failed');
           return;
         }
 
@@ -98,7 +96,7 @@ export default function LoadingScreen() {
 
           // Hard stop after 90s of post-scrape waiting.
           if (Date.now() - (succeededAt ?? Date.now()) > 90_000) {
-            setError('We had trouble building your profile. Please try again.');
+            setFailCode('profile_timeout');
             return;
           }
         }
@@ -122,22 +120,25 @@ export default function LoadingScreen() {
         style={StyleSheet.absoluteFill as any}
       />
 
-      {unreadable ? (
+      {failed ? (
         <View style={styles.content}>
-          <Text style={styles.lock}>🔒</Text>
+          <Text style={styles.lock}>{isUnreadable(failCode) ? '🔒' : '✨'}</Text>
           <Text style={styles.title}>
-            {handle ? `@${handle} looks private` : 'That account looks private'}
+            {isUnreadable(failCode)
+              ? (handle ? `@${handle} looks private` : 'That account looks private')
+              : 'Let’s try another way'}
           </Text>
           <Text style={styles.subtitle}>
-            We can only read public posts, so we couldn’t learn your vibe from{' '}
-            {platform ? platform : 'that account'}. Answer a few quick questions instead — it takes about a minute.
+            {isUnreadable(failCode)
+              ? `We can only read public posts, so we couldn’t learn your vibe from ${platform ?? 'that account'}. Answer a few quick questions instead — it takes about a minute.`
+              : 'We couldn’t read public posts from that account. Answer a few quick questions instead — it takes about a minute.'}
           </Text>
 
           <Pressable style={styles.primaryBtn} onPress={() => router.replace('/(onboarding)/quiz')}>
             <Text style={styles.primaryText}>Answer a few questions</Text>
           </Pressable>
           <Pressable style={styles.ghostBtn} onPress={() => router.replace('/(onboarding)/handle')}>
-            <Text style={styles.retryText}>Try a public account</Text>
+            <Text style={styles.retryText}>Try another account</Text>
           </Pressable>
         </View>
       ) : (
@@ -145,20 +146,10 @@ export default function LoadingScreen() {
           <LotusParticles size={300} />
 
           <Text style={styles.title}>Reading your vibes</Text>
-          {error ? (
-            <Text style={styles.subtitle}>Couldn’t finish: {error}</Text>
-          ) : (
-            <Typewriter
-              phrases={PHRASES[status] ?? PHRASES.queued}
-              style={styles.subtitle}
-            />
-          )}
-
-          {error && (
-            <Pressable style={styles.retryBtn} onPress={() => router.replace('/(onboarding)/handle')}>
-              <Text style={styles.retryText}>Try a different handle</Text>
-            </Pressable>
-          )}
+          <Typewriter
+            phrases={PHRASES[status] ?? PHRASES.queued}
+            style={styles.subtitle}
+          />
         </View>
       )}
     </ImageBackground>
