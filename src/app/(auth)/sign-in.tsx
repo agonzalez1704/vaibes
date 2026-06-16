@@ -164,6 +164,10 @@ export default function SignIn() {
             )}
           </Pressable>
 
+          <Pressable style={styles.emailLink} onPress={() => router.push('/(auth)/email-sign-in' as any)}>
+            <Text style={styles.emailLinkText}>Sign in with email</Text>
+          </Pressable>
+
           <Pressable style={styles.back} onPress={() => router.back()}>
             <Text style={styles.backText}>Back</Text>
           </Pressable>
@@ -193,6 +197,8 @@ const styles = StyleSheet.create({
   appleText: { color: '#fff', fontSize: 16, fontWeight: '500' },
   googleBtn: { backgroundColor: '#fff' },
   googleText: { color: '#000', fontSize: 16, fontWeight: '500' },
-  back: { marginTop: 16, alignItems: 'center' },
+  emailLink: { marginTop: 8, alignItems: 'center', paddingVertical: 8 },
+  emailLinkText: { color: 'rgba(255,255,255,0.85)', fontSize: 15, textDecorationLine: 'underline' },
+  back: { marginTop: 12, alignItems: 'center' },
   backText: { color: 'rgba(255,255,255,0.85)' },
 });
