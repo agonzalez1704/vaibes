@@ -1,5 +1,5 @@
 import { AppleIcon, GoogleIcon } from '@/components/icons';
-import { useSSO } from '@clerk/clerk-expo';
+import { useSSO, useSignIn } from '@clerk/clerk-expo';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
@@ -40,6 +40,38 @@ export default function SignIn() {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const { startSSOFlow } = useSSO();
+  const { signIn, setActive: setActiveSignIn } = useSignIn();
+
+  // App Review demo access: one tap into the full Pro experience via a Clerk
+  // sign-in ticket minted server-side. No credentials, no email code.
+  const onDemoAccess = useCallback(async () => {
+    setBusy('demo');
+    try {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_INSFORGE_URL}/functions/demo-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.EXPO_PUBLIC_INSFORGE_ANON_KEY}`,
+        },
+      });
+      const data = await res.json();
+      if (!data?.token || !signIn) {
+        Alert.alert('Demo unavailable', 'Could not start demo session. Please try again.');
+        return;
+      }
+      const attempt = await signIn.create({ strategy: 'ticket', ticket: data.token });
+      if (attempt.status === 'complete' && attempt.createdSessionId && setActiveSignIn) {
+        await setActiveSignIn({ session: attempt.createdSessionId });
+        router.replace('/(app)/home');
+        return;
+      }
+      Alert.alert('Demo unavailable', `Status: ${attempt.status}`);
+    } catch (err: any) {
+      Alert.alert('Demo failed', err?.errors?.[0]?.message ?? err?.message ?? String(err));
+    } finally {
+      setBusy(null);
+    }
+  }, [signIn, setActiveSignIn, router]);
 
   const player = useVideoPlayer(bgVideo, (p) => {
     p.loop = true;
@@ -168,6 +200,14 @@ export default function SignIn() {
             <Text style={styles.emailLinkText}>Sign in with email</Text>
           </Pressable>
 
+          <Pressable style={styles.demoBtn} disabled={!!busy} onPress={onDemoAccess}>
+            {busy === 'demo' ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.demoText}>Reviewer demo access</Text>
+            )}
+          </Pressable>
+
           <Pressable style={styles.back} onPress={() => router.back()}>
             <Text style={styles.backText}>Back</Text>
           </Pressable>
@@ -199,6 +239,11 @@ const styles = StyleSheet.create({
   googleText: { color: '#000', fontSize: 16, fontWeight: '500' },
   emailLink: { marginTop: 8, alignItems: 'center', paddingVertical: 8 },
   emailLinkText: { color: 'rgba(255,255,255,0.85)', fontSize: 15, textDecorationLine: 'underline' },
+  demoBtn: {
+    marginTop: 6, alignItems: 'center', justifyContent: 'center', paddingVertical: 14,
+    borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)',
+  },
+  demoText: { color: 'rgba(255,255,255,0.9)', fontSize: 14, letterSpacing: 0.3 },
   back: { marginTop: 12, alignItems: 'center' },
   backText: { color: 'rgba(255,255,255,0.85)' },
 });
