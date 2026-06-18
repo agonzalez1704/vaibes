@@ -11,6 +11,13 @@ import { useInsforgeClient } from '@/lib/insforge';
 
 const bgVideo = require('../../../assets/videos/rainy-tree-loop.mp4');
 
+// The App Review demo account signs in by these credentials. Because the Clerk
+// instance forces an email-code second factor and has no username identifier,
+// we complete this specific account via a server-minted sign-in ticket so the
+// reviewer experiences a normal username + password login.
+const DEMO_USERNAME = 'appreview';
+const DEMO_PASSWORD = 'Vaibes-Review-2026!xQ7';
+
 // Email + password sign-in. Primary use: a reviewer/demo account that already
 // completed onboarding. After auth, route to home if the account has a profile,
 // otherwise into onboarding.
@@ -34,7 +41,27 @@ export default function EmailSignIn() {
     if (!canSubmit || !signIn) return;
     setBusy(true);
     try {
-      const attempt = await signIn.create({ identifier: email.trim(), password });
+      const id = email.trim();
+      const isDemo = id.toLowerCase() === DEMO_USERNAME && password === DEMO_PASSWORD;
+
+      let attempt;
+      if (isDemo) {
+        // Complete the demo account via a server-minted ticket (the instance
+        // can't complete it with a plain identifier + password).
+        const res = await fetch(`${process.env.EXPO_PUBLIC_INSFORGE_URL}/functions/demo-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.EXPO_PUBLIC_INSFORGE_ANON_KEY}`,
+          },
+        });
+        const data = await res.json();
+        if (!data?.token) throw new Error('Demo session unavailable. Please try again.');
+        attempt = await signIn.create({ strategy: 'ticket', ticket: data.token });
+      } else {
+        attempt = await signIn.create({ identifier: id, password });
+      }
+
       if (attempt.status !== 'complete') {
         Alert.alert('Sign-in incomplete', `Status: ${attempt.status}`);
         setBusy(false);
@@ -71,8 +98,8 @@ export default function EmailSignIn() {
 
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.top}>
-          <Text style={styles.title}>Sign in with email</Text>
-          <Text style={styles.subtitle}>Enter your email and password.</Text>
+          <Text style={styles.title}>Sign in</Text>
+          <Text style={styles.subtitle}>Enter your email or username and password.</Text>
         </View>
 
         <View style={styles.bottom}>
@@ -80,11 +107,11 @@ export default function EmailSignIn() {
             style={styles.input}
             value={email}
             onChangeText={setEmail}
-            placeholder="you@example.com"
+            placeholder="Email or username"
             placeholderTextColor="rgba(255,255,255,0.4)"
             autoCapitalize="none"
             autoCorrect={false}
-            keyboardType="email-address"
+            keyboardType="default"
             textContentType="username"
           />
           <TextInput
